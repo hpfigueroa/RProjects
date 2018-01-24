@@ -1,6 +1,6 @@
 ---
 title: 'Energy and Power Units: Understanding a utility bill'
-author: "Hernan Figueroa - Fall 2016- Columbia University MECE4210"
+author: "Hernan Figueroa - Fall 2016 - Columbia University MECE4210"
 output: html_document
 ---
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
