@@ -1,0 +1,159 @@
+---
+title: 'Energy and Power Units: Understanding a utility bill'
+author: "Hernan Figueroa - Fall 2016- Columbia University MECE4210"
+output: html_document
+---
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(knitr)
+solution.print=TRUE
+code.print=TRUE
+```
+### Introduction  
+A utility bill contains information in different units of energy, power and volume.  Utility bills and tariff structures vary from country to country and city to city. Charges in utility bills can include demand charges, delivery charges, supply charges and other miscellaneous charges. Furthermore, these charges change depending on location, customer type, month of the year and time of day. Needless to say, electric bills can be complex.
+
+In New York State, the charges above are split into bills from different companies. A utility company charges for energy delivery and demand, and a power generation company collects charges for energy usage. Here is a more detailed description of these charges.
+
+**The Demand charge** covers the costs of maintaining sufficient capacity and facilities to meet the maximum requirements of customers. Even though these facilities may not always be used at full capacity, they are required so that the electricity is available to customers whenever they want it. The demand charge is usually proportional to the greatest amount of electric power used in any one-half hour during the billing period measured in kW or kilowatts of demand of electricity.
+
+**The Delivery charge** covers the costs of delivering power to customers and maintaining the equipment, poles, wires and pipes that carry electricity or natural gas. This charge is proportional to KWh or CCF of natural gas delivered. Please note that for natural gas, CCF is a volume unit.  
+
+**The Energy/Supply charge** covers the cost of the actual energy (in the form of electricity or natural gas) that a generation company supplies to their customers. It is usually left up to the market in the case of New York State this charge come from an independent energy generator. Electricity usage is billed by the kilowatt-hour (kWh) and gas usage is charged by the BTU or Therms used. 
+
+In this assignment we will analyze utility bills for a building in New York City. We will use a combination of the three charges mentioned above to understand the relationship between energy units and energy costs. The building location is serviced by Consolidated Edison. Out of the many companies that provide energy supply services in the area, this building uses Direct Energy. 
+
+The following information is provided:
+
+a.	Hourly electricity usage information for a two billing cycles June 2014 and December 2014. Note that meter readings do not fall exactly at the end of the month, so the reading for June 2014 ends on July 09 2014 and the reading for December 2014 ends on January 08 2015.
+
+b.	Monthly consumption information for January 2014 to June 2015. Data points for June 2014 and December 2014 have been deleted.
+
+c.	Bills for the month of February 2015: Electric and Gas delivery bill from Consolidated Edison. Electric supply bill from Direct Energy.
+
+NOTE: Although prices change month by month in New York, for this assignment we will use the rates for February 2015 for all calculations in this assignment. 
+
+###Question 1   
+Plot hourly demand for two billing cycles, one ending on July 09th 2014 (Jun'14 consumption) and another January 08th 2015 (Dec'14 consumption). Calculate monthly electric energy usage and greatest amount of power used for both billing cycles. Electric energy usage is measured in kWh, and is equal to power (kW) multiplied by time (hr).
+
+```{r echo=code.print}
+#Loading hourly demand datasets
+demand.hour.jun <- read.csv("Hourly demand data Coop Jun.csv", header=T)
+demand.hour.dec <- read.csv("Hourly demand data Coop Dec.csv", header=T)
+#convert Date and Hour to Time
+demand.hour.jun$DATE_HR <- as.POSIXct(demand.hour.jun$DATE_HR,format="%m/%d/%Y %H:%M")
+demand.hour.dec$DATE_HR <- as.POSIXct(demand.hour.dec$DATE_HR,format="%m/%d/%Y %H:%M")
+```
+```{r echo=code.print, include=solution.print}
+#Plot demand curves
+plot(demand.hour.jun$DATE_HR,demand.hour.jun$DM_kW, type="l",
+     main="Hourly Demand in Jun 2014", xlab="Date", ylab="Demand (kW)",
+     cex.lab=1.2, cex.main=1.5)
+grid()
+```
+
+```{r echo=code.print, include=solution.print}
+plot(demand.hour.dec$DATE_HR,demand.hour.dec$DM_kW, type="l",
+     main="Hourly Demand in Dec 2014", xlab="Date", ylab="Demand (kW)",
+     cex.lab=1.2, cex.main=1.5)
+grid()
+```
+
+```{r echo=code.print}
+#Since hourly power demand is given at each hour, the consumed energy is numerically equal to the power demand (1kW*1hr = 1kWh).
+#Total energy usage is the sum of all power points
+usage.month.jun <- sum(demand.hour.jun$DM_kW)
+usage.month.dec <- sum(demand.hour.dec$DM_kW)
+#The greatest amount of power required for this account is the maximum value of the dataset
+demand.month.jun <- max(demand.hour.jun$DM_kW)
+demand.month.dec <- max(demand.hour.dec$DM_kW)
+```
+```{r echo=solution.print, include=solution.print}
+#ENERGY USAGE JUNE and December
+bill.summary <- data.frame(Energy = c(usage.month.jun,usage.month.dec),
+                         MaxDemand = c(demand.month.jun,demand.month.dec),
+                         row.names = c("June","December"))
+kable(bill.summary)
+```
+
+###Question 2    
+Find at what date and time the peak demand occurs for both billing cycles. Plot the hourly demand for each day and add the peak demand points in the plot.  Discuss potential reasons for demand peak times.
+
+```{r, echo=code.print}
+#Finding when maximum power is consumed
+max.demand.jun <- which.max(demand.hour.jun$DM_kW)
+max.demand.dec <- which.max(demand.hour.dec$DM_kW)
+max.demand.hour.jun <- demand.hour.jun$DM_kW[(24*floor(max.demand.jun/24)+1):(24*ceiling(max.demand.jun/24))]
+max.hour.jun <- demand.hour.jun$DATE_HR[(24*floor(max.demand.jun/24)+1):(24*ceiling(max.demand.jun/24))]
+max.demand.hour.dec <- demand.hour.dec$DM_kW[(24*floor(max.demand.dec/24)+1):(24*ceiling(max.demand.dec/24))]
+max.hour.dec <- demand.hour.dec$DATE_HR[(24*floor(max.demand.dec/24)+1):(24*ceiling(max.demand.dec/24))]
+```
+
+```{r echo=code.print, include=solution.print}
+#Plot demand curves
+plot(max.hour.jun,max.demand.hour.jun, type="l",
+     main="Hourly Demand in Jun 2014", xlab="Date", ylab="Demand (kW)",
+     cex.lab=1.2, cex.main=1.5)
+grid()
+points(demand.hour.jun$DATE_HR[max.demand.jun],demand.hour.jun$DM_kW[max.demand.jun], col="red")
+```
+```{r echo=solution.print, include=solution.print}
+# During summer months, electricity consumption is greatly influenced by outside air temperature because people use electricity to power air conditioning units. The maximum power demand value for the Jun'14 billing cycle occurred on Wednesday July 02 2014 at 13 hours or 1pm. Usually, outside air temperature peaks around noon and this is where the highest demand is seen this day, most likely due to high use of air conditioning units. Also, this peak happened around the July 4th holiday. It is possible that people spent more time at the building this particular day.
+```
+```{r echo=code.print, include=solution.print}
+plot(max.hour.dec,max.demand.hour.dec, type="l",
+     main="Hourly Demand in Dec 2014", xlab="Date", ylab="Demand (kW)",
+     cex.lab=1.2, cex.main=1.5)
+grid()
+points(demand.hour.dec$DATE_HR[max.demand.dec],demand.hour.dec$DM_kW[max.demand.dec], col="red")
+```
+```{r echo=solution.print, include=solution.print}
+# In winter, electricity demand is less dependent on outside air temperature since heating is usually not powered by electricity. The maximum power demand value for the Dec'14 billing cycle occurred on Thursday January 08th 2015 at 18 hours or 6pm. With less electricity demand for air conditioning, demand peaks occur when most residents come back home from work, starting at 4pm until 7pm, and turn on lights, TV's and other loads.  
+```
+
+##Question 3  
+Tabulate the monthly demand and energy usage for this building. Calculate electric demand, delivery and supply unit rates using utility bills from the example bills provided. Calculate the monthly and annual cost of electricity for this building. 
+```{r echo=code.print, include=solution.print}
+#Loading monthly demand datasets
+demand.month <- read.csv("Monthly Electric Demand Coop.csv")
+demand.month$TO_DATE <- as.POSIXct(demand.month$TO_DATE,format = "%m/%d/%Y")
+#Replace empty rows (7 and 13) with corresponding calculated values for June and December
+demand.month$USE_KWH[7] <- usage.month.jun
+demand.month$USE_KWH[13] <- usage.month.dec
+demand.month$DMD_kW[7] <- demand.month.jun
+demand.month$DMD_kW[13] <- demand.month.dec
+```
+
+
+```{r echo=code.print,include=solution.print}
+row.names(demand.month) <- format(demand.month$TO_DATE,format="%b-%Y")
+kable(demand.month, digits=0)
+```
+  
+
+```{r echo=code.print, include=solution.print}
+#Input values to current workspace
+delivery.rate <- 0.034
+demand.rate <- 23.46
+supply.rate <- 0.1017
+electricity.rate <- data.frame(demand.rate, delivery.rate, supply.rate,
+                               row.names = "Rates")
+kable(electricity.rate, col.names = c("Demand","Delivery","Supply"), digits=2)
+
+delivery.charges <- delivery.rate*demand.month$USE_KWH
+demand.charges <- demand.rate*demand.month$DMD_kW
+supply.charges <- supply.rate*demand.month$USE_KWH
+electricity.charges <- data.frame(demand.charges, delivery.charges, supply.charges,
+                                  row.names = format(demand.month$TO_DATE,format="%b-%Y"))
+kable(electricity.charges, digits=2)
+```
+
+
+```{r echo=solution.print, include=solution.print}
+#TOTAL ANNUAL CHARGES
+Total <- data.frame(sum(demand.charges),sum(delivery.charges), sum(supply.charges), 
+                    row.names="Annual Total")
+kable(Total, col.names = c("Demand","Delivery","Supply"), digits=2)
+```
+
+
+
+
